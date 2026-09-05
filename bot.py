@@ -12,12 +12,20 @@ import requests
 from datetime import date
 
 # ============================================================
-# SOZLAMALAR
+# SOZLAMALAR (GOOGLE GEMINI API)
 # ============================================================
+try:
+    import config
+    CONFIG_KEY = getattr(config, "GEMINI_API_KEY", "")
+    CONFIG_MODEL = getattr(config, "GEMINI_MODEL", "gemini-3.6-flash")
+except ImportError:
+    CONFIG_KEY = ""
+    CONFIG_MODEL = "gemini-3.6-flash"
+
 DATA_FILE = "kaloriya_data.json"
-API_KEY_ENV = "OPENROUTER_API_KEY"  # API kalitni shu muhit o'zgaruvchisiga qo'ying
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "anthropic/claude-sonnet-4.5"  # xohlasangiz "openai/gpt-4o" ga almashtiring
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", CONFIG_KEY)
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", CONFIG_MODEL)
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
 st.set_page_config(page_title="Kaloriya Hisoblagich", page_icon="🍽", layout="centered")
 
@@ -63,15 +71,14 @@ def calc_tdee(jins, yosh, boy, vazn, faollik_koef):
 
 
 # ============================================================
-# OPENROUTER VISION ORQALI RASMNI TAHLIL QILISH
+# GOOGLE GEMINI VISION ORQALI RASMNI TAHLIL QILISH
 # ============================================================
 def analyze_food_image(image_bytes, media_type="image/jpeg"):
-    api_key = os.environ.get(API_KEY_ENV)
+    api_key = GEMINI_API_KEY
     if not api_key:
-        return {"error": "OPENROUTER_API_KEY muhit o'zgaruvchisi topilmadi. API kalitni sozlang."}
+        return {"error": "GEMINI_API_KEY topilmadi. config.py yoki muhit o'zgaruvchisini tekshiring."}
 
     b64_image = base64.standard_b64encode(image_bytes).decode("utf-8")
-    data_url = f"data:{media_type};base64,{b64_image}"
 
     prompt = (
         "Bu rasmdagi taomni aniqla va FAQAT quyidagi JSON formatida javob qaytar, "
@@ -81,29 +88,32 @@ def analyze_food_image(image_bytes, media_type="image/jpeg"):
         "Eng ehtimoliy taxminni ber, aniqlik uchun savol berma."
     )
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
+    url = f"{GEMINI_API_URL}?key={api_key}"
     payload = {
-        "model": OPENROUTER_MODEL,
-        "max_tokens": 500,
-        "messages": [
+        "contents": [
             {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": data_url}},
-                ],
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": media_type,
+                            "data": b64_image,
+                        }
+                    },
+                ]
             }
         ],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "maxOutputTokens": 500,
+        },
     }
 
     try:
-        response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
+        response = requests.post(url, json=payload, timeout=60)
         response.raise_for_status()
         data = response.json()
-        raw_text = data["choices"][0]["message"]["content"].strip()
+        raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
         # Ba'zan model ```json``` bilan o'rab yuborishi mumkin - tozalaymiz
         raw_text = re.sub(r"^```json\s*|\s*```$", "", raw_text.strip())
         result = json.loads(raw_text)
@@ -111,7 +121,7 @@ def analyze_food_image(image_bytes, media_type="image/jpeg"):
     except json.JSONDecodeError:
         return {"error": "Rasmni aniqlab bo'lmadi (JSON xato). Qaytadan urinib ko'ring."}
     except requests.exceptions.RequestException as e:
-        return {"error": f"API so'rovida xatolik: {e}"}
+        return {"error": f"Gemini API so'rovida xatolik: {e}"}
     except Exception as e:
         return {"error": f"Xatolik yuz berdi: {e}"}
 

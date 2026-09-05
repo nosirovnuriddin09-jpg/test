@@ -3,886 +3,1504 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kaloriya Hisoblagich - Rasm orqali AI taom tahlili</title>
-  <meta name="description" content="Sun'iy intellekt va rasm yordamida taomlar kaloriyasini oson va aniq hisoblang. Kunlik normangizni nazorat qiling.">
-  
-  <!-- Google Fonts & Lucide Icons -->
+  <title>Kaloriya AI - Ovqat va Kaloriya Hisoblagich</title>
+  <meta name="description" content="Google Gemini AI bilan taom kaloriyasini hisoblash ilovasi">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- React & Babel CDNs -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-              800: '#166534',
-              900: '#14532d',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
+    :root {
+      --bg-page: #f4f6fa;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --border-color: #f1f5f9;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --accent-cyan: #38bdf8;
+      --gauge-empty: #e2e8f0;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: linear-gradient(135deg, #f0fdf4 0%, #e6f4ea 50%, #f8fafc 100%);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 75px;
     }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.85);
+
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 4px 0;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: #f1eafe;
+      border: 2px solid #e9d5ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .user-info h2 {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .user-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon-top {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    .btn-icon-top:active {
+      transform: scale(0.95);
+    }
+
+    /* Search Bar */
+    .search-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-main);
+      background: transparent;
+      font-weight: 500;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    /* Calorie Card */
+    .calorie-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 20px 18px;
+      box-shadow: 0 8px 24px -4px rgba(0,0,0,0.04);
+      border: 1px solid #edf2f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .card-header-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .btn-edit-target {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Arc Gauge */
+    .gauge-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 8px 0;
+    }
+
+    .gauge-svg {
+      width: 260px;
+      height: 145px;
+      overflow: visible;
+    }
+
+    .arc-bar {
+      transition: stroke 0.25s ease;
+    }
+
+    .gauge-center {
+      position: absolute;
+      bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .gauge-emoji {
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .gauge-number {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      color: var(--text-main);
+    }
+
+    .gauge-sublabel {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* Macros row */
+    .macros-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding-top: 14px;
+      margin-top: 6px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .macro-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .macro-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-protein { background: #f59e0b; }
+    .dot-carbs { background: #0ea5e9; }
+    .dot-fat { background: #10b981; }
+
+    .macro-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .macro-label {
+      font-size: 10px;
+      color: var(--text-subtle);
+      font-weight: 600;
+    }
+
+    .macro-val {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .macro-max {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-subtle);
+    }
+
+    /* Action bar banner */
+    .action-cta-card {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border-radius: 22px;
+      padding: 16px 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.35);
+    }
+
+    .cta-text h3 {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .cta-text p {
+      font-size: 11px;
+      opacity: 0.85;
+      font-weight: 500;
+    }
+
+    .btn-cta {
+      background: #fff;
+      color: #0369a1;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-cta:active {
+      transform: scale(0.96);
+    }
+
+    /* Quick Presets */
+    .presets-card {
+      background: #fff;
+      border-radius: 22px;
+      padding: 14px 16px;
+      border: 1px solid #edf2f7;
+      box-shadow: 0 4px 12px -2px rgba(0,0,0,0.02);
+    }
+
+    .presets-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-subtle);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .preset-btn {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn:active {
+      background: #e0f2fe;
+      border-color: #7dd3fc;
+      transform: scale(0.96);
+    }
+
+    .preset-emoji {
+      font-size: 20px;
+    }
+
+    .preset-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .preset-kcal {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Meals List */
+    .meals-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .meals-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .meals-header h3 {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .meals-stats {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .meals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .meal-item {
+      background: #fff;
+      border-radius: 20px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid #f1f5f9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: border 0.15s ease;
+    }
+
+    .meal-item:hover {
+      border-color: #cbd5e1;
+    }
+
+    .meal-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .meal-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .meal-meta {
+      min-width: 0;
+    }
+
+    .meal-meta h4 {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meal-meta p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .meal-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .meal-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-subtle);
+    }
+
+    .btn-delete-meal {
+      background: none;
+      border: none;
+      color: #cbd5e1;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-delete-meal:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+    }
+
+    .empty-meals {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px 16px;
+      text-align: center;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .empty-meals p {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .empty-meals span {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #fff;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 380px;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      animation: modalSlide 0.2s ease-out;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .btn-close-modal {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: #f1f5f9;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .modal-icon-header {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 12px;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 18px;
+      font-weight: 500;
+    }
+
+    /* Scanner upload box */
+    .upload-zone {
+      border: 2px dashed #7dd3fc;
+      background: #f0f9ff;
+      border-radius: 20px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background 0.15s ease;
+    }
+
+    .upload-zone:hover {
+      background: #e0f2fe;
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 2px;
+    }
+
+    .upload-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0369a1;
+    }
+
+    .upload-hint {
+      font-size: 10px;
+      color: #0284c7;
+      font-weight: 600;
+    }
+
+    /* Pending Result */
+    .pending-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .pending-box.active {
+      display: block;
+    }
+
+    .pending-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .pending-food-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .pending-food-kcal {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .pending-details {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .pending-macros-chips {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .btn-grid-modal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn-primary-action {
+      background: var(--text-main);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-secondary-action {
+      background: #e2e8f0;
+      color: var(--text-main);
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Loading state */
+    .loading-state {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      display: none;
+      margin-bottom: 14px;
+    }
+
+    .loading-state.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #0284c7;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Form groups */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .gender-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .gender-label {
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .gender-label.selected {
+      border-color: var(--text-main);
+      background: #f8fafc;
+    }
+
+    .three-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    /* Fixed Bottom Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(220, 252, 231, 0.7);
+      border-top: 1px solid #e2e8f0;
+      padding: 10px 24px 14px;
+      display: flex;
+      justify-content: center;
+      z-index: 50;
     }
-    .pulse-loader {
-      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+    .bottom-nav-inner {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: .5; }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text-subtle);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-btn.active {
+      color: var(--text-main);
+    }
+
+    .nav-btn .nav-icon {
+      font-size: 18px;
+    }
+
+    .nav-scan-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: #0284c7;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      border: none;
+      cursor: pointer;
+      margin-top: -16px;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      transition: transform 0.15s ease;
+    }
+
+    .nav-scan-btn:active {
+      transform: scale(0.95);
     }
   </style>
 </head>
-<body class="text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    // Helper functions for LocalStorage
-    const getTodayKey = () => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `daily_log_${year}-${month}-${day}`;
-    };
-
-    const formatDateUz = (dateStr) => {
-      if (!dateStr) return '';
-      const [year, month, day] = dateStr.split('-');
-      const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
-      return `${parseInt(day)} ${months[parseInt(month) - 1]}, ${year}`;
-    };
-
-    // Main App Component
-    function App() {
-      const [profile, setProfile] = useState(null);
-      const [apiKey, setApiKey] = useState(() => localStorage.getItem('anthropic_api_key') || '8894252658:AAGPyAbsm3Bn_WnJ4uHAHQMHItTF-AsmDNA');
-      const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-
-      // Profile Form State
-      const [gender, setGender] = useState('male');
-      const [age, setAge] = useState(25);
-      const [height, setHeight] = useState(175);
-      const [weight, setWeight] = useState(70);
-      const [activity, setActivity] = useState(1.55);
-
-      // Scanning & Processing States
-      const [selectedImage, setSelectedImage] = useState(null);
-      const [isLoading, setIsLoading] = useState(false);
-      const [analysisResult, setAnalysisResult] = useState(null);
-      const [errorMessage, setErrorMessage] = useState(null);
-
-      // Daily Logs State
-      const [todayLogs, setTodayLogs] = useState([]);
-      const [activeTab, setActiveTab] = useState('today'); // 'today' | 'history' | 'profile'
-      const [historyLogs, setHistoryLogs] = useState([]);
-
-      // Load Profile & Today's Logs on mount
-      useEffect(() => {
-        const savedProfile = localStorage.getItem('user_profile');
-        if (savedProfile) {
-          try {
-            const parsed = JSON.parse(savedProfile);
-            setProfile(parsed);
-            setGender(parsed.gender || 'male');
-            setAge(parsed.age || 25);
-            setHeight(parsed.height || 175);
-            setWeight(parsed.weight || 70);
-            setActivity(parsed.activity || 1.55);
-          } catch (e) {
-            console.error('Error reading profile', e);
-          }
-        }
-
-        loadLogs();
-        loadHistory();
-      }, []);
-
-      const loadLogs = () => {
-        const key = getTodayKey();
-        const logs = localStorage.getItem(key);
-        if (logs) {
-          try {
-            setTodayLogs(JSON.parse(logs));
-          } catch (e) {
-            setTodayLogs([]);
-          }
-        } else {
-          setTodayLogs([]);
-        }
-      };
-
-      const loadHistory = () => {
-        const historyKeys = [];
-        const historyData = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('daily_log_') && key !== getTodayKey()) {
-            try {
-              const items = JSON.parse(localStorage.getItem(key) || '[]');
-              const totalKcal = items.reduce((acc, curr) => acc + (Number(curr.kaloriya) || 0), 0);
-              const dateStr = key.replace('daily_log_', '');
-              historyData.push({
-                date: dateStr,
-                items,
-                totalKcal
-              });
-            } catch (e) {}
-          }
-        }
-        // Sort descending by date
-        historyData.sort((a, b) => b.date.localeCompare(a.date));
-        setHistoryLogs(historyData);
-      };
-
-      // TDEE Calculation (Mifflin-St Jeor formula)
-      const calculateTDEE = (p) => {
-        if (!p) return 2000;
-        const w = Number(p.weight);
-        const h = Number(p.height);
-        const a = Number(p.age);
-        const act = Number(p.activity);
-
-        let bmr = 0;
-        if (p.gender === 'male') {
-          bmr = 10 * w + 6.25 * h - 5 * a + 5;
-        } else {
-          bmr = 10 * w + 6.25 * h - 5 * a - 161;
-        }
-        return Math.round(bmr * act);
-      };
-
-      const tdee = profile ? calculateTDEE(profile) : 2000;
-      const consumedKcal = todayLogs.reduce((acc, item) => acc + (Number(item.kaloriya) || 0), 0);
-      const remainingKcal = tdee - consumedKcal;
-      const progressPercent = Math.min(100, Math.round((consumedKcal / tdee) * 100));
-
-      // Handle Profile Submit
-      const handleSaveProfile = (e) => {
-        e.preventDefault();
-        const newProfile = {
-          gender,
-          age: Number(age),
-          height: Number(height),
-          weight: Number(weight),
-          activity: Number(activity)
-        };
-        localStorage.setItem('user_profile', JSON.stringify(newProfile));
-        setProfile(newProfile);
-        setActiveTab('today');
-      };
-
-      // Handle Save API Key
-      const handleSaveApiKey = (keyVal) => {
-        localStorage.setItem('anthropic_api_key', keyVal);
-        setApiKey(keyVal);
-        setShowApiKeyModal(false);
-      };
-
-      // Handle Image Selection
-      const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        setErrorMessage(null);
-        setAnalysisResult(null);
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setSelectedImage(reader.result);
-        };
-        reader.readAsDataURL(file);
-      };
-
-      // Anthropic API Call (Claude Sonnet vision)
-      const analyzeImage = async () => {
-        if (!selectedImage) return;
-
-        setIsLoading(true);
-        setErrorMessage(null);
-
-        // Extract base64 and media type
-        const base64Data = selectedImage.split(',')[1];
-        const mediaTypeMatch = selectedImage.match(/^data:(image\/[a-zA-Z+]+);base64,/);
-        const mediaType = mediaTypeMatch ? mediaTypeMatch[1] : 'image/jpeg';
-
-        const promptText = `Bu rasmdagi taomni aniqla va JSON formatida qaytar: {"taom_nomi": "...", "porsiya_grammda": ..., "kaloriya": ..., "oqsil_g": ..., "yog_g": ..., "uglevod_g": ...}. Faqat JSON qaytar, boshqa hech narsa yozma.`;
-
-        const requestHeaders = {
-          "Content-Type": "application/json"
-        };
-        
-        // Add Anthropic header if user supplied API key
-        if (apiKey) {
-          requestHeaders["x-api-key"] = apiKey;
-          requestHeaders["anthropic-version"] = "2023-06-01";
-          requestHeaders["dangerously-allow-browser-user-agent-header"] = "true";
-        }
-
-        try {
-          const res = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: requestHeaders,
-            body: JSON.stringify({
-              model: "claude-sonnet-4-6",
-              max_tokens: 500,
-              messages: [{
-                role: "user",
-                content: [
-                  { 
-                    type: "image", 
-                    source: { 
-                      type: "base64", 
-                      media_type: mediaType, 
-                      data: base64Data 
-                    } 
-                  },
-                  { type: "text", text: promptText }
-                ]
-              }]
-            })
-          });
-
-          if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`API Error: ${res.status} ${res.statusText}`);
-          }
-
-          const data = await res.json();
-          const contentText = data.content?.[0]?.text || "";
-          
-          // Extract JSON from response
-          const jsonMatch = contentText.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) {
-            throw new Error("JSON response parse failed");
-          }
-
-          const parsedObj = JSON.parse(jsonMatch[0]);
-          setAnalysisResult({
-            id: Date.now(),
-            taom_nomi: parsedObj.taom_nomi || "Noma'lum taom",
-            porsiya_grammda: Number(parsedObj.porsiya_grammda) || 200,
-            kaloriya: Number(parsedObj.kaloriya) || 0,
-            oqsil_g: Number(parsedObj.oqsil_g) || 0,
-            yog_g: Number(parsedObj.yog_g) || 0,
-            uglevod_g: Number(parsedObj.uglevod_g) || 0,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            image: selectedImage
-          });
-        } catch (err) {
-          console.warn("API Call direct attempt failed or rejected by CORS/Key, offering fallback / retry:", err);
-          setErrorMessage("Rasmni aniqlab bo'lmadi, qaytadan urinib ko'ring.");
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      // Add meal to daily log
-      const handleAddMeal = () => {
-        if (!analysisResult) return;
-        const key = getTodayKey();
-        const updatedLogs = [analysisResult, ...todayLogs];
-        localStorage.setItem(key, JSON.stringify(updatedLogs));
-        setTodayLogs(updatedLogs);
-
-        // Reset Scanner
-        setSelectedImage(null);
-        setAnalysisResult(null);
-        setErrorMessage(null);
-      };
-
-      // Skip current scan
-      const handleSkipMeal = () => {
-        setSelectedImage(null);
-        setAnalysisResult(null);
-        setErrorMessage(null);
-      };
-
-      // Delete log item
-      const handleDeleteMeal = (id) => {
-        const key = getTodayKey();
-        const updatedLogs = todayLogs.filter(item => item.id !== id);
-        localStorage.setItem(key, JSON.stringify(updatedLogs));
-        setTodayLogs(updatedLogs);
-      };
-
-      // Initialize lucide icons on render
-      useEffect(() => {
-        if (window.lucide) {
-          window.lucide.createIcons();
-        }
-      });
-
-      // RENDER: If profile doesn't exist, demand Profile Entry first
-      if (!profile) {
-        return (
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="glass-card max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-emerald-100">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-brand-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/30">
-                  <i data-lucide="utensils" className="w-8 h-8"></i>
-                </div>
-                <h1 className="text-2xl font-extrabold text-slate-900">Xush kelibsiz!</h1>
-                <p className="text-slate-600 text-sm mt-1">Kunlik kaloriya me'yorini hisoblash uchun ma'lumotlaringizni kiriting</p>
-              </div>
-
-              <form onSubmit={handleSaveProfile} className="space-y-5">
-                {/* Gender */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jinsi</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${gender === 'male' ? 'border-brand-500 bg-brand-50/50 text-brand-700 font-bold' : 'border-slate-200 bg-white text-slate-600'}`}>
-                      <input type="radio" name="gender" value="male" checked={gender === 'male'} onChange={() => setGender('male')} className="hidden" />
-                      <i data-lucide="user" className="w-5 h-5"></i>
-                      Erkak
-                    </label>
-                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${gender === 'female' ? 'border-brand-500 bg-brand-50/50 text-brand-700 font-bold' : 'border-slate-200 bg-white text-slate-600'}`}>
-                      <input type="radio" name="gender" value="female" checked={gender === 'female'} onChange={() => setGender('female')} className="hidden" />
-                      <i data-lucide="user-check" className="w-5 h-5"></i>
-                      Ayol
-                    </label>
-                  </div>
-                </div>
-
-                {/* Inputs: Age, Height, Weight */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Yoshi</label>
-                    <input 
-                      type="number" 
-                      required 
-                      min="10" 
-                      max="120"
-                      value={age} 
-                      onChange={(e) => setAge(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Bo'yi (sm)</label>
-                    <input 
-                      type="number" 
-                      required 
-                      min="100" 
-                      max="250"
-                      value={height} 
-                      onChange={(e) => setHeight(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Vazni (kg)</label>
-                    <input 
-                      type="number" 
-                      required 
-                      min="30" 
-                      max="300"
-                      value={weight} 
-                      onChange={(e) => setWeight(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Activity Level */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Faollik darajasi</label>
-                  <select 
-                    value={activity} 
-                    onChange={(e) => setActivity(e.target.value)}
-                    className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="1.2">Kam harakat (1.2)</option>
-                    <option value="1.55">O'rtacha faol (1.55)</option>
-                    <option value="1.9">Juda faol (1.9)</option>
-                  </select>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="w-full py-4 bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-2 text-base mt-4"
-                >
-                  <span>Saqlash va Boshlash</span>
-                  <i data-lucide="arrow-right" className="w-5 h-5"></i>
-                </button>
-              </form>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="max-w-md mx-auto pb-24 px-4 pt-6">
-          {/* Header */}
-          <header className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-brand-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-brand-500/20">
-                <i data-lucide="flame" className="w-6 h-6"></i>
-              </div>
-              <div>
-                <h1 className="text-xl font-black text-slate-900 tracking-tight">Kaloriya Hisoblagich</h1>
-                <p className="text-xs font-medium text-slate-500">AI bilan taomlarni tahlil qilish</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowApiKeyModal(true)}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition"
-              title="Anthropic API Kalitini Sozlash"
-            >
-              <i data-lucide="key" className="w-5 h-5"></i>
-            </button>
-          </header>
-
-          {/* Key Modal */}
-          {showApiKeyModal && (
-            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
-                <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                  <i data-lucide="key" className="w-5 h-5 text-brand-500"></i>
-                  API Kalit Sozlamasi
-                </h3>
-                <p className="text-xs text-slate-600 mb-4">
-                  Anthropic API kalitingiz bo'lsa kiriting (ixtiyoriy). Bo'sh qoldirilsa ham ilova avtomatik AI javob berishini davom ettiradi.
-                </p>
-                <input 
-                  type="password" 
-                  placeholder="sk-ant-api..." 
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-4 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleSaveApiKey(apiKey)}
-                    className="flex-1 py-2.5 bg-brand-500 text-white rounded-xl font-bold text-xs"
-                  >
-                    Saqlash
-                  </button>
-                  <button 
-                    onClick={() => setShowApiKeyModal(false)}
-                    className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs"
-                  >
-                    Yopish
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MAIN DAILY OVERVIEW CARD */}
-          <div className="glass-card rounded-3xl p-6 shadow-xl mb-6 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-brand-700 bg-brand-100/70 px-3 py-1 rounded-full">
-                Bugungi Natija
-              </span>
-              <span className="text-xs text-slate-500 font-semibold">{formatDateUz(getTodayKey().replace('daily_log_', ''))}</span>
-            </div>
-
-            {/* Target vs Consumed */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-white/80 p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Yegan jami kaloriya</p>
-                <p className="text-2xl font-black text-slate-900 mt-1">
-                  {consumedKcal} <span className="text-xs font-bold text-slate-400">kkal</span>
-                </p>
-              </div>
-
-              <div className="bg-white/80 p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium">Kunlik me'yor</p>
-                <p className="text-2xl font-black text-brand-600 mt-1">
-                  {tdee} <span className="text-xs font-bold text-slate-400">kkal</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Remaining status */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-sm mb-1.5 font-bold">
-                <span>Qolgan kaloriya:</span>
-                <span className={remainingKcal < 0 ? 'text-red-500 font-extrabold' : 'text-slate-800'}>
-                  {remainingKcal < 0 ? `Me'yordan oshdi: ${Math.abs(remainingKcal)} kkal` : `${remainingKcal} kkal`}
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full bg-slate-200 rounded-full h-3.5 p-0.5 overflow-hidden">
-                <div 
-                  className={`h-full rounded-full transition-all duration-500 ${remainingKcal < 0 ? 'bg-red-500' : 'bg-brand-500'}`}
-                  style={{ width: `${progressPercent}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          {/* NAVIGATION TABS */}
-          <div className="flex bg-slate-200/60 p-1 rounded-2xl mb-6">
-            <button 
-              onClick={() => setActiveTab('today')}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition ${activeTab === 'today' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Bugun va Rasm Scan
-            </button>
-            <button 
-              onClick={() => setActiveTab('history')}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition ${activeTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Tarix
-            </button>
-            <button 
-              onClick={() => setActiveTab('profile')}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition ${activeTab === 'profile' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Profil & Me'yor
-            </button>
-          </div>
-
-          {/* TAB 1: TODAY & SCANNER */}
-          {activeTab === 'today' && (
-            <div className="space-y-6">
-              {/* CAMERA / IMAGE UPLOAD SECTION */}
-              <div className="glass-card rounded-3xl p-5 shadow-lg border border-brand-100">
-                <h2 className="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <i data-lucide="camera" className="w-5 h-5 text-brand-600"></i>
-                  Rasm orqali hisoblash
-                </h2>
-
-                {!selectedImage ? (
-                  <label className="border-2 border-dashed border-brand-200 hover:border-brand-500 bg-brand-50/40 hover:bg-brand-50 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition">
-                    <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mb-2">
-                      <i data-lucide="upload-cloud" className="w-6 h-6"></i>
-                    </div>
-                    <span className="text-sm font-bold text-slate-700">Taom rasmini yuklang</span>
-                    <span className="text-xs text-slate-400 mt-1">Kamera yoki gallereyadan tanlang</span>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleImageUpload} 
-                      className="hidden" 
-                    />
-                  </label>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Selected Image Preview */}
-                    <div className="relative rounded-2xl overflow-hidden max-h-56 bg-slate-900">
-                      <img src={selectedImage} alt="Selected food" className="w-full h-full object-cover" />
-                      {!isLoading && !analysisResult && (
-                        <button 
-                          onClick={handleSkipMeal}
-                          className="absolute top-2 right-2 p-2 bg-slate-900/70 text-white rounded-full hover:bg-slate-900"
-                        >
-                          <i data-lucide="x" className="w-4 h-4"></i>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Action button if not analyzed yet */}
-                    {!analysisResult && !isLoading && !errorMessage && (
-                      <button 
-                        onClick={analyzeImage}
-                        className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2"
-                      >
-                        <i data-lucide="sparkles" className="w-5 h-5"></i>
-                        <span>AI Bilan Kaloriyasini Aniqlash</span>
-                      </button>
-                    )}
-
-                    {/* Loading Spinner */}
-                    {isLoading && (
-                      <div className="bg-emerald-50 rounded-2xl p-6 text-center border border-emerald-200">
-                        <div className="inline-block w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p className="text-sm font-bold text-brand-900">AI taomni tahlil qilmoqda...</p>
-                        <p className="text-xs text-brand-700 mt-1">Iltimos, kutib turing</p>
-                      </div>
-                    )}
-
-                    {/* Error Message */}
-                    {errorMessage && (
-                      <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
-                        <p className="text-sm font-bold text-red-600 mb-3">{errorMessage}</p>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={analyzeImage}
-                            className="flex-1 py-2 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700"
-                          >
-                            Qaytadan urinib ko'rish
-                          </button>
-                          <button 
-                            onClick={handleSkipMeal}
-                            className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl"
-                          >
-                            Bekor qilish
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ANALYSIS RESULT CARD */}
-                    {analysisResult && (
-                      <div className="bg-white rounded-2xl p-5 border border-brand-200 shadow-lg space-y-4">
-                        <div className="border-b pb-3">
-                          <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                            🍽 {analysisResult.taom_nomi}
-                          </h3>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            📏 Porsiya: <span className="font-bold text-slate-800">{analysisResult.porsiya_grammda} gramm</span>
-                          </p>
-                        </div>
-
-                        {/* Calories highlight */}
-                        <div className="bg-brand-50 p-3 rounded-xl flex items-center justify-between">
-                          <span className="text-xs font-bold text-brand-800">🔥 Kaloriya:</span>
-                          <span className="text-xl font-black text-brand-600">{analysisResult.kaloriya} kkal</span>
-                        </div>
-
-                        {/* Nutrients Grid */}
-                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                          <div className="bg-slate-50 p-2.5 rounded-xl">
-                            <span className="text-slate-400 block font-medium">Oqsil</span>
-                            <span className="font-bold text-slate-800 text-sm">{analysisResult.oqsil_g} g</span>
-                          </div>
-                          <div className="bg-slate-50 p-2.5 rounded-xl">
-                            <span className="text-slate-400 block font-medium">Yog'</span>
-                            <span className="font-bold text-slate-800 text-sm">{analysisResult.yog_g} g</span>
-                          </div>
-                          <div className="bg-slate-50 p-2.5 rounded-xl">
-                            <span className="text-slate-400 block font-medium">Uglevod</span>
-                            <span className="font-bold text-slate-800 text-sm">{analysisResult.uglevod_g} g</span>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons: Add vs Skip */}
-                        <div className="grid grid-cols-2 gap-3 pt-2">
-                          <button 
-                            onClick={handleAddMeal}
-                            className="py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 text-sm"
-                          >
-                            <span>✅ Qo'shish</span>
-                          </button>
-                          <button 
-                            onClick={handleSkipMeal}
-                            className="py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-1.5 text-sm"
-                          >
-                            <span>❌ O'tkazib yuborish</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* LIST OF TODAY'S MEALS */}
-              <div className="glass-card rounded-3xl p-5 shadow-lg">
-                <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center justify-between">
-                  <span>Bugungi Taomlar Ro'yxati</span>
-                  <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
-                    {todayLogs.length} ta taom
-                  </span>
-                </h3>
-
-                {todayLogs.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400">
-                    <i data-lucide="utensils-crossed" className="w-10 h-10 mx-auto mb-2 opacity-50"></i>
-                    <p className="text-sm font-medium">Bugun hali taom qo'shilmadi</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {todayLogs.map((item) => (
-                      <div key={item.id} className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          {item.image ? (
-                            <img src={item.image} alt={item.taom_nomi} className="w-12 h-12 rounded-xl object-cover" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-lg">
-                              🍽
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-bold text-slate-900 text-sm">{item.taom_nomi}</h4>
-                            <p className="text-xs text-slate-500">
-                              {item.porsiya_grammda}g • <span className="font-bold text-brand-600">{item.kaloriya} kkal</span>
-                            </p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">
-                              O: {item.oqsil_g}g | Y: {item.yog_g}g | U: {item.uglevod_g}g
-                            </p>
-                          </div>
-                        </div>
-
-                        <button 
-                          onClick={() => handleDeleteMeal(item.id)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
-                          title="O'chirish"
-                        >
-                          <i data-lucide="trash-2" className="w-4 h-4"></i>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: HISTORY */}
-          {activeTab === 'history' && (
-            <div className="glass-card rounded-3xl p-5 shadow-lg space-y-4">
-              <h2 className="text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
-                <i data-lucide="history" className="w-5 h-5 text-brand-600"></i>
-                Eski kunlar tarixi
-              </h2>
-
-              {historyLogs.length === 0 ? (
-                <div className="text-center py-10 text-slate-400">
-                  <i data-lucide="calendar" className="w-10 h-10 mx-auto mb-2 opacity-50"></i>
-                  <p className="text-sm font-medium">Hali o'tgan kunlar tarixi mavjud emas</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {historyLogs.map((dayLog) => (
-                    <div key={dayLog.date} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-slate-900 text-sm">
-                          {formatDateUz(dayLog.date)}
-                        </span>
-                        <span className="text-xs font-black text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">
-                          {dayLog.totalKcal} kkal
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        Qabul qilingan taomlar soni: {dayLog.items.length} ta
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: PROFILE EDIT */}
-          {activeTab === 'profile' && (
-            <div className="glass-card rounded-3xl p-6 shadow-lg">
-              <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <i data-lucide="sliders" className="w-5 h-5 text-brand-600"></i>
-                Profil va TDEE me'yorini tahrirlash
-              </h2>
-
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Jinsi</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${gender === 'male' ? 'border-brand-500 bg-brand-50/50 text-brand-700 font-bold' : 'border-slate-200 bg-white text-slate-600'}`}>
-                      <input type="radio" name="gender" value="male" checked={gender === 'male'} onChange={() => setGender('male')} className="hidden" />
-                      Erkak
-                    </label>
-                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${gender === 'female' ? 'border-brand-500 bg-brand-50/50 text-brand-700 font-bold' : 'border-slate-200 bg-white text-slate-600'}`}>
-                      <input type="radio" name="gender" value="female" checked={gender === 'female'} onChange={() => setGender('female')} className="hidden" />
-                      Ayol
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Yoshi</label>
-                    <input 
-                      type="number" 
-                      required 
-                      value={age} 
-                      onChange={(e) => setAge(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Bo'yi (sm)</label>
-                    <input 
-                      type="number" 
-                      required 
-                      value={height} 
-                      onChange={(e) => setHeight(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Vazni (kg)</label>
-                    <input 
-                      type="number" 
-                      required 
-                      value={weight} 
-                      onChange={(e) => setWeight(e.target.value)} 
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Faollik darajasi</label>
-                  <select 
-                    value={activity} 
-                    onChange={(e) => setActivity(e.target.value)}
-                    className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="1.2">Kam harakat (1.2)</option>
-                    <option value="1.55">O'rtacha faol (1.55)</option>
-                    <option value="1.9">Juda faol (1.9)</option>
-                  </select>
-                </div>
-
-                <div className="bg-brand-50 p-4 rounded-2xl border border-brand-100 text-center">
-                  <p className="text-xs text-brand-800 font-bold uppercase tracking-wide">Yangi Hisoblangan Me'yor</p>
-                  <p className="text-2xl font-black text-brand-600 mt-1">
-                    {calculateTDEE({ gender, age, height, weight, activity })} kkal
-                  </p>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition"
-                >
-                  O'zgarishlarni Saqlash
-                </button>
-              </form>
-            </div>
-          )}
+<body>
+
+  <div class="app-container">
+    
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="user-badge" onclick="openProfileModal()">
+        <div class="user-avatar">🧔🏻‍♂️</div>
+        <div class="user-info">
+          <h2>Kaloriya AI</h2>
+          <p id="topTargetText">Kunlik me'yor: 2,200 kkal</p>
         </div>
-      );
+      </div>
+      <div class="top-actions">
+        <button class="btn-icon-top" onclick="openProfileModal()" title="Profil sozlamalari">⚙️</button>
+        <button class="btn-icon-top" onclick="clearTodayData()" title="Bugungi ro'yxatni tozalash">🔄</button>
+      </div>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-box">
+      <span style="font-size: 14px;">🔍</span>
+      <input type="text" id="searchInput" placeholder="Taom nomini qidirish..." oninput="filterMeals(this.value)">
+    </div>
+
+    <!-- Calorie Progress Card -->
+    <div class="calorie-card">
+      <div class="card-header-row">
+        <span class="card-title">Kaloriyalar</span>
+        <button class="btn-edit-target" onclick="openProfileModal()">Tahrirlash</button>
+      </div>
+
+      <!-- Segmented Arc Gauge -->
+      <div class="gauge-wrapper">
+        <svg id="calorieGaugeSvg" viewBox="0 0 300 160" class="gauge-svg"></svg>
+        <div class="gauge-center">
+          <span class="gauge-emoji">🔥</span>
+          <span id="remainingKcal" class="gauge-number">2,200</span>
+          <span class="gauge-sublabel">Qolgan kaloriya</span>
+        </div>
+      </div>
+
+      <!-- Macros Breakdown -->
+      <div class="macros-row">
+        <div class="macro-item">
+          <div class="macro-dot dot-protein"></div>
+          <div class="macro-text">
+            <span class="macro-label">Oqsil</span>
+            <span class="macro-val"><span id="valProtein">0</span><span class="macro-max">/77g</span></span>
+          </div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-dot dot-carbs"></div>
+          <div class="macro-text">
+            <span class="macro-label">Uglevod</span>
+            <span class="macro-val"><span id="valCarbs">0</span><span class="macro-max">/150g</span></span>
+          </div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-dot dot-fat"></div>
+          <div class="macro-text">
+            <span class="macro-label">Yog'</span>
+            <span class="macro-val"><span id="valFat">0</span><span class="macro-max">/60g</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Scanner CTA -->
+    <div class="action-cta-card">
+      <div class="cta-text">
+        <h3>Taomni rasmga oling 📸</h3>
+        <p>Gemini AI kaloriyasini aniqlab beradi</p>
+      </div>
+      <button class="btn-cta" onclick="openScannerModal()">Skanerlash</button>
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="presets-card">
+      <div class="presets-title">
+        <span>Tezkor taomlar</span>
+        <span>⚡️</span>
+      </div>
+      <div class="presets-grid">
+        <button class="preset-btn" onclick="addPreset('plov')">
+          <span class="preset-emoji">🍛</span>
+          <span class="preset-name">Palov</span>
+          <span class="preset-kcal">680 kkal</span>
+        </button>
+        <button class="preset-btn" onclick="addPreset('somsa')">
+          <span class="preset-emoji">🥟</span>
+          <span class="preset-name">Somsa</span>
+          <span class="preset-kcal">390 kkal</span>
+        </button>
+        <button class="preset-btn" onclick="addPreset('shashlik')">
+          <span class="preset-emoji">🍢</span>
+          <span class="preset-name">Shashlik</span>
+          <span class="preset-kcal">450 kkal</span>
+        </button>
+        <button class="preset-btn" onclick="addPreset('salad')">
+          <span class="preset-emoji">🥗</span>
+          <span class="preset-name">Salat</span>
+          <span class="preset-kcal">180 kkal</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Daily Meals List -->
+    <div class="meals-section">
+      <div class="meals-header">
+        <h3>Bugungi taomlar</h3>
+        <span id="mealsSummary" class="meals-stats">0 taom • 0 kkal</span>
+      </div>
+      <div id="mealsContainer" class="meals-list">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-bar">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <span class="nav-icon">🏠</span>
+        <span>Asosiy</span>
+      </button>
+      <button class="nav-scan-btn" onclick="openScannerModal()" title="AI bilan skanerlash">
+        📷
+      </button>
+      <button class="nav-btn" onclick="openProfileModal()">
+        <span class="nav-icon">👤</span>
+        <span>Profil</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: AI Food Scanner -->
+  <div id="scannerModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="btn-close-modal" onclick="closeScannerModal()">✕</button>
+      
+      <div class="modal-icon-header">📷</div>
+      <h3 class="modal-title">Taomni Skanerlash</h3>
+      <p class="modal-subtitle">Fotosurat orqali porsiya va kaloriyani avtomatik hisoblash</p>
+
+      <label class="upload-zone">
+        <span class="upload-icon">🍽</span>
+        <span class="upload-title" id="uploadStatusText">Rasm tanlang yoki rasmga oling</span>
+        <span class="upload-hint">JPG, PNG, WEBP qabul qilinadi</span>
+        <input type="file" id="photoFileInput" accept="image/*" style="display:none;" onchange="handleImageFile(event)">
+      </label>
+
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="loading-state">
+        <div class="spinner"></div>
+        <span style="font-size: 12px; font-weight: 700; color: #0369a1;">Gemini AI tahlil qilmoqda...</span>
+      </div>
+
+      <!-- Pending Food Result -->
+      <div id="pendingFoodBox" class="pending-box">
+        <div class="pending-title-row">
+          <span id="resFoodName" class="pending-food-name">Taom nomi</span>
+          <span id="resFoodKcal" class="pending-food-kcal">0 kkal</span>
+        </div>
+        <p id="resFoodPortion" class="pending-details">Porsiya: 200 g</p>
+        <div class="pending-macros-chips">
+          <span class="chip" id="resFoodP">O: 0g</span>
+          <span class="chip" id="resFoodC">U: 0g</span>
+          <span class="chip" id="resFoodF">Y: 0g</span>
+        </div>
+        <div class="btn-grid-modal">
+          <button class="btn-primary-action" onclick="confirmAddPendingFood()">Qo'shish</button>
+          <button class="btn-secondary-action" onclick="cancelPendingFood()">Bekor qilish</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: Profile & TDEE Settings -->
+  <div id="profileModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="btn-close-modal" onclick="closeProfileModal()">✕</button>
+
+      <div class="modal-icon-header">⚙️</div>
+      <h3 class="modal-title">Profil & TDEE Me'yori</h3>
+      <p class="modal-subtitle">Kunlik kaloriya normangizni hisoblash</p>
+
+      <form onsubmit="saveProfile(event)">
+        <div class="form-group">
+          <label>Jinsi</label>
+          <div class="gender-selector">
+            <div id="btnMale" class="gender-label selected" onclick="selectGender('Erkak')">Erkak</div>
+            <div id="btnFemale" class="gender-label" onclick="selectGender('Ayol')">Ayol</div>
+          </div>
+        </div>
+
+        <div class="three-inputs form-group">
+          <div>
+            <label>Yosh</label>
+            <input type="number" id="inputAge" class="form-input" value="25" min="10" max="100">
+          </div>
+          <div>
+            <label>Bo'y (sm)</label>
+            <input type="number" id="inputHeight" class="form-input" value="175" min="100" max="250">
+          </div>
+          <div>
+            <label>Vazn (kg)</label>
+            <input type="number" id="inputWeight" class="form-input" value="70" min="30" max="250">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Faollik darajasi</label>
+          <select id="inputActivity" class="form-input">
+            <option value="1.2">Kam harakat (1.2)</option>
+            <option value="1.55" selected>O'rtacha faol (1.55)</option>
+            <option value="1.9">Juda faol (1.9)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Gemini API Kaliti (AI skaner uchun)</label>
+          <input type="password" id="inputApiKey" class="form-input" placeholder="AIzaSy...">
+        </div>
+
+        <button type="submit" class="btn-primary-action" style="width: 100%; margin-top: 10px;">
+          Saqlash va Hisoblash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    let geminiApiKey = localStorage.getItem("gemini_api_key") || "";
+    const GEMINI_MODEL = "gemini-1.5-flash";
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+
+    // App State
+    let profile = {
+      gender: "Erkak",
+      age: 25,
+      height: 175,
+      weight: 70,
+      activity: 1.55,
+      tdee: 2200
+    };
+
+    let meals = [];
+    let pendingFood = null;
+
+    // Load from LocalStorage
+    function loadSavedState() {
+      try {
+        const savedProf = localStorage.getItem("kaloriya_profile");
+        if (savedProf) {
+          profile = JSON.parse(savedProf);
+        }
+        const savedMeals = localStorage.getItem("kaloriya_meals");
+        if (savedMeals) {
+          meals = JSON.parse(savedMeals);
+        }
+      } catch (e) {
+        console.warn("Storage error:", e);
+      }
     }
 
-    // Render App
-    const rootElement = document.getElementById('root');
-    const root = ReactDOM.createRoot(rootElement);
-    root.render(<App />);
+    function saveState() {
+      try {
+        localStorage.setItem("kaloriya_profile", JSON.stringify(profile));
+        localStorage.setItem("kaloriya_meals", JSON.stringify(meals));
+      } catch (e) {
+        console.warn("Storage error:", e);
+      }
+    }
+
+    // TDEE calculation (Mifflin-St Jeor)
+    function calcTDEE(p) {
+      let bmr = 0;
+      if (p.gender === "Erkak") {
+        bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + 5;
+      } else {
+        bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age - 161;
+      }
+      return Math.round(bmr * p.activity);
+    }
+
+    // Render Radial Segmented Arc Gauge (Zero lag, updates stroke of 24 bars)
+    function renderGauge() {
+      const svg = document.getElementById("calorieGaugeSvg");
+      const totalKcal = meals.reduce((s, m) => s + m.calories, 0);
+      const remaining = Math.max(0, profile.tdee - totalKcal);
+
+      document.getElementById("remainingKcal").innerText = remaining.toLocaleString("uz-UZ");
+      document.getElementById("topTargetText").innerText = `Kunlik me'yor: ${profile.tdee.toLocaleString("uz-UZ")} kkal`;
+
+      // Calculate macros
+      const totP = meals.reduce((s, m) => s + (m.protein || 0), 0);
+      const totC = meals.reduce((s, m) => s + (m.carbs || 0), 0);
+      const totF = meals.reduce((s, m) => s + (m.fat || 0), 0);
+
+      document.getElementById("valProtein").innerText = totP;
+      document.getElementById("valCarbs").innerText = totC;
+      document.getElementById("valFat").innerText = totF;
+
+      const numBars = 24;
+      const progress = Math.min(1, totalKcal / profile.tdee);
+      const filledCount = Math.round(progress * numBars);
+
+      // Create bars once or update stroke
+      if (svg.children.length !== numBars) {
+        svg.innerHTML = "";
+        const cx = 150;
+        const cy = 135;
+        const rInner = 82;
+        const rOuter = 104;
+
+        for (let i = 0; i < numBars; i++) {
+          const angleDeg = 180 + (i * 180 / (numBars - 1));
+          const angleRad = (angleDeg * Math.PI) / 180;
+
+          const x1 = cx + rInner * Math.cos(angleRad);
+          const y1 = cy + rInner * Math.sin(angleRad);
+          const x2 = cx + rOuter * Math.cos(angleRad);
+          const y2 = cy + rOuter * Math.sin(angleRad);
+
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", x1.toFixed(1));
+          line.setAttribute("y1", y1.toFixed(1));
+          line.setAttribute("x2", x2.toFixed(1));
+          line.setAttribute("y2", y2.toFixed(1));
+          line.setAttribute("stroke-width", "7");
+          line.setAttribute("stroke-linecap", "round");
+          line.setAttribute("class", "arc-bar");
+          svg.appendChild(line);
+        }
+      }
+
+      const lines = svg.children;
+      for (let i = 0; i < lines.length; i++) {
+        lines[i].setAttribute("stroke", i < filledCount ? "#38bdf8" : "#e2e8f0");
+      }
+    }
+
+    // Render Meals
+    function renderMeals(items = meals) {
+      const container = document.getElementById("mealsContainer");
+      const totalKcal = meals.reduce((s, m) => s + m.calories, 0);
+      document.getElementById("mealsSummary").innerText = `${meals.length} taom • ${totalKcal.toLocaleString("uz-UZ")} kkal`;
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-meals">
+            <p>Hali taom kiritilmadi</p>
+            <span>Yuqoridagi "Skanerlash" yoki tezkor taomlardan birini tanlang</span>
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+      items.forEach(m => {
+        html += `
+          <div class="meal-item">
+            <div class="meal-left">
+              <div class="meal-icon">${m.icon || '🍽'}</div>
+              <div class="meal-meta">
+                <h4>${escapeHtml(m.name)}</h4>
+                <p>${m.portion}g • <strong style="color:#0284c7;">${m.calories} kkal</strong></p>
+              </div>
+            </div>
+            <div class="meal-right">
+              <span class="meal-time">${m.time || ''}</span>
+              <button class="btn-delete-meal" onclick="deleteMeal(${m.id})" title="O'chirish">🗑</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    function deleteMeal(id) {
+      meals = meals.filter(m => m.id !== id);
+      saveState();
+      renderGauge();
+      renderMeals();
+    }
+
+    function clearTodayData() {
+      if (confirm("Bugungi barcha kiritilgan taomlarni o'chirmoqchimisiz?")) {
+        meals = [];
+        saveState();
+        renderGauge();
+        renderMeals();
+      }
+    }
+
+    function filterMeals(q) {
+      const query = (q || "").toLowerCase().trim();
+      if (!query) {
+        renderMeals(meals);
+        return;
+      }
+      const filtered = meals.filter(m => m.name.toLowerCase().includes(query));
+      renderMeals(filtered);
+    }
+
+    // Quick presets
+    const PRESETS = {
+      plov: { name: "Toshkentcha Palov", portion: 350, calories: 680, protein: 24, carbs: 74, fat: 32, icon: "🍛" },
+      somsa: { name: "Tandir Somsa", portion: 160, calories: 390, protein: 16, carbs: 34, fat: 22, icon: "🥟" },
+      shashlik: { name: "Qo'y Shashlik", portion: 200, calories: 450, protein: 34, carbs: 2, fat: 33, icon: "🍢" },
+      salad: { name: "Achchiq-chuchuk", portion: 180, calories: 120, protein: 3, carbs: 12, fat: 7, icon: "🥗" }
+    };
+
+    function addPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+      const newMeal = {
+        id: Date.now(),
+        name: p.name,
+        portion: p.portion,
+        calories: p.calories,
+        protein: p.protein,
+        carbs: p.carbs,
+        fat: p.fat,
+        icon: p.icon,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      meals.unshift(newMeal);
+      saveState();
+      renderGauge();
+      renderMeals();
+    }
+
+    // Modal controls
+    function openScannerModal() {
+      document.getElementById("scannerModal").classList.add("active");
+      document.getElementById("pendingFoodBox").classList.remove("active");
+      document.getElementById("loadingIndicator").classList.remove("active");
+      document.getElementById("uploadStatusText").innerText = "Rasm tanlang yoki rasmga oling";
+    }
+
+    function closeScannerModal() {
+      document.getElementById("scannerModal").classList.remove("active");
+    }
+
+    function openProfileModal() {
+      document.getElementById("profileModal").classList.add("active");
+      document.getElementById("inputAge").value = profile.age;
+      document.getElementById("inputHeight").value = profile.height;
+      document.getElementById("inputWeight").value = profile.weight;
+      document.getElementById("inputActivity").value = profile.activity;
+      document.getElementById("inputApiKey").value = localStorage.getItem("gemini_api_key") || "";
+      selectGender(profile.gender);
+    }
+
+    function closeProfileModal() {
+      document.getElementById("profileModal").classList.remove("active");
+    }
+
+    function selectGender(g) {
+      profile.gender = g;
+      const bM = document.getElementById("btnMale");
+      const bF = document.getElementById("btnFemale");
+      if (g === "Erkak") {
+        bM.classList.add("selected");
+        bF.classList.remove("selected");
+      } else {
+        bF.classList.add("selected");
+        bM.classList.remove("selected");
+      }
+    }
+
+    function saveProfile(e) {
+      e.preventDefault();
+      profile.age = parseFloat(document.getElementById("inputAge").value) || 25;
+      profile.height = parseFloat(document.getElementById("inputHeight").value) || 175;
+      profile.weight = parseFloat(document.getElementById("inputWeight").value) || 70;
+      profile.activity = parseFloat(document.getElementById("inputActivity").value) || 1.55;
+      profile.tdee = calcTDEE(profile);
+
+      const enteredKey = document.getElementById("inputApiKey").value.trim();
+      if (enteredKey) {
+        localStorage.setItem("gemini_api_key", enteredKey);
+        geminiApiKey = enteredKey;
+      }
+
+      saveState();
+      closeProfileModal();
+      renderGauge();
+    }
+
+    // AI Food Scanner (Gemini Vision API)
+    async function handleImageFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      let activeKey = geminiApiKey || localStorage.getItem("gemini_api_key");
+      if (!activeKey) {
+        activeKey = prompt("AI skanerlash uchun Google Gemini API kalitingizni kiriting:", "");
+        if (activeKey) {
+          activeKey = activeKey.trim();
+          localStorage.setItem("gemini_api_key", activeKey);
+          geminiApiKey = activeKey;
+        } else {
+          alert("API kalit kiritilmadi. Skanerlash bekor qilindi.");
+          return;
+        }
+      }
+
+      document.getElementById("uploadStatusText").innerText = file.name;
+      const loading = document.getElementById("loadingIndicator");
+      const pendingBox = document.getElementById("pendingFoodBox");
+
+      loading.classList.add("active");
+      pendingBox.classList.remove("active");
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const base64Data = reader.result.split(",")[1];
+            const mimeType = file.type || "image/jpeg";
+
+            const prompt = "Bu rasmdagi taomni aniqla va FAQAT quyidagi JSON formatida javob qaytar: {\"taom_nomi\": \"...\", \"porsiya_grammda\": 000, \"kaloriya\": 000, \"oqsil_g\": 00, \"yog_g\": 00, \"uglevod_g\": 00}. Boshqa hech qanday izoh yoki belgi qo'shma.";
+            const endpoint = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${activeKey}`;
+            const payload = {
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: mimeType, data: base64Data } }
+                ]
+              }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            };
+
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Gemini API xatoligi: " + response.status);
+
+            const data = await response.json();
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = JSON.parse(rawText);
+
+            pendingFood = {
+              id: Date.now(),
+              name: parsed.taom_nomi || "Noma'lum taom",
+              portion: parsed.porsiya_grammda || 200,
+              calories: parsed.kaloriya || 250,
+              protein: parsed.oqsil_g || 10,
+              carbs: parsed.uglevod_g || 25,
+              fat: parsed.yog_g || 10,
+              icon: "🍽",
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            document.getElementById("resFoodName").innerText = pendingFood.name;
+            document.getElementById("resFoodKcal").innerText = `${pendingFood.calories} kkal`;
+            document.getElementById("resFoodPortion").innerText = `Porsiya: ${pendingFood.portion} g`;
+            document.getElementById("resFoodP").innerText = `O: ${pendingFood.protein}g`;
+            document.getElementById("resFoodC").innerText = `U: ${pendingFood.carbs}g`;
+            document.getElementById("resFoodF").innerText = `Y: ${pendingFood.fat}g`;
+
+            loading.classList.remove("active");
+            pendingBox.classList.add("active");
+          } catch (err) {
+            loading.classList.remove("active");
+            alert("Tahlil qilishda xatolik: " + err.message);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        loading.classList.remove("active");
+        alert("Faylni o'qishda xatolik: " + err.message);
+      }
+    }
+
+    function confirmAddPendingFood() {
+      if (!pendingFood) return;
+      meals.unshift(pendingFood);
+      pendingFood = null;
+      saveState();
+      closeScannerModal();
+      renderGauge();
+      renderMeals();
+    }
+
+    function cancelPendingFood() {
+      pendingFood = null;
+      document.getElementById("pendingFoodBox").classList.remove("active");
+    }
+
+    // Initialize
+    loadSavedState();
+    profile.tdee = calcTDEE(profile);
+    renderGauge();
+    renderMeals();
   </script>
 </body>
 </html>
